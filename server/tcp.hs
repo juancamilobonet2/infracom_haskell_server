@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use when" #-}
-module TCP where
+module Main where
 
 import           Network.Simple.TCP
 import           Control.Concurrent
