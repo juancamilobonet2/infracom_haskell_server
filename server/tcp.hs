@@ -12,7 +12,7 @@ import           Data.Maybe ( isNothing )
 main = do
   putStrLn "Starting server..."
   putStrLn "Cual archivo quiere mandar?"
-  file <- readLn
+  file <- getLine
   putStrLn "Cuantos clientes quieres atender a la vez"
   clientes <- readLn
   clientesConn <- newMVar 0
