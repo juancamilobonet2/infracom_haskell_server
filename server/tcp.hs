@@ -16,7 +16,7 @@ main = do
   putStrLn "Cuantos clientes quieres atender a la vez"
   clientes <- readLn
   clientesConn <- newMVar 0
-  serve (Host "0.0.0.0") "8000" (handleSocket clientesConn clientes file)
+  serve (Host "0.0.0.0") "80" (handleSocket clientesConn clientes file)
   -- Now you may use connectionSocket as you please within this scope,
   -- possibly using recv and send to interact with the remote end.kkkk
 
