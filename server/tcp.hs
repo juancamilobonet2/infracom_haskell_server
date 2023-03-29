@@ -38,7 +38,7 @@ handleSocket totalMvar clientes file (connectionSocket,remoteAddr) = do
 
   -- Mandar archivo
   contenido <- L.readFile file
-  let bsList = L.group contenido
+  let bsList = groupBySize 50000 contenido
   mapM_ (sendLazy connectionSocket) bsList
   putStrLn $ "Cliente atendido: " ++ show remoteAddr
 
@@ -54,3 +54,11 @@ untilMVar p mvar = do
 
 encodeUtf8Txt :: String -> L.ByteString
 encodeUtf8Txt = toLazyByteString . stringUtf8
+
+groupBySize :: Int -> L.ByteString -> [L.ByteString]
+groupBySize size bs = go bs
+  where
+    go bytes
+      | L.null bytes = []
+      | otherwise      = let (chunk, rest) = L.splitAt (fromIntegral size) bytes
+                         in chunk : go rest
