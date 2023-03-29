@@ -38,7 +38,8 @@ handleSocket totalMvar clientes file (connectionSocket,remoteAddr) = do
 
   -- Mandar archivo
   contenido <- L.readFile file
-  sendLazy connectionSocket contenido
+  let bsList = L.group contenido
+  mapM_ (sendLazy connectionSocket) bsList
   putStrLn $ "Cliente atendido: " ++ show remoteAddr
 
   --TODO hash y logs

@@ -2,15 +2,17 @@ module Client where
 
 import Network.Simple.TCP
 import System.Environment
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isNothing)
 import Data.Text.Encoding
 import Data.Text ( unpack )
 import           Data.ByteString.Builder
 import qualified Data.ByteString.Lazy               as L
 import qualified Data.ByteString                    as B
+import Control.Monad.Loops (untilM', untilM, whileJust)
+import CPrim (bSwapLabel)
 
 main = do
-  connect "192.168.202.135" "8000" cliente
+  connect "192.168.202.135" "80" cliente
 
 cliente :: (Socket, SockAddr) -> IO()
 cliente (connectionSocket, remoteAddr) = do
@@ -29,10 +31,11 @@ cliente (connectionSocket, remoteAddr) = do
   let clientes = maybe "Err" (unpack . decodeUtf8) maybeClientes
 
   --Recibir archivo
-  maybeFile <- recv connectionSocket 300000000
+  bsList <- whileJust (recv connectionSocket 600000) return
+
   let fileName = "./ArchivosRecibidos/Cliente"++numCliente++"-Prueba-"++clientes++".txt"
-  let file = fromMaybe B.empty maybeFile
-  B.writeFile fileName file
+  let file = L.fromChunks bsList
+  L.writeFile fileName file
 
   putStrLn "Listo"
 
