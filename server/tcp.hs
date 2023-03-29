@@ -36,6 +36,7 @@ handleSocket totalMvar clientes file (connectionSocket,remoteAddr) = do
   --Mandar numero total clientes
   sendLazy connectionSocket $ encodeUtf8Txt $ show clientes
 
+  threadDelay 1000
   -- Mandar archivo
   contenido <- L.readFile file
   let bsList = groupBySize 50000 contenido
