@@ -7,6 +7,7 @@ import           Control.Concurrent
 import qualified Data.ByteString.Lazy               as L
 import           Data.ByteString.Builder
 import           Data.Maybe ( isNothing )
+import           Crypto.Hash
 --import           Control.Monad.Loops(untilM_)
 
 main = do
@@ -16,12 +17,20 @@ main = do
   putStrLn "Cuantos clientes quieres atender a la vez"
   clientes <- readLn
   clientesConn <- newMVar 0
-  serve (Host "0.0.0.0") "80" (handleSocket clientesConn clientes file)
+
+  
+  contenido <- L.readFile file
+  let bsList = groupBySize 50000 contenido
+  let hashed = hashlazy contenido :: Digest SHA256
+
+  putStrLn $ "Hash del archivo: " ++ show hashed
+
+  serve (Host "0.0.0.0") "80" (handleSocket clientesConn clientes bsList)
   -- Now you may use connectionSocket as you please within this scope,
   -- possibly using recv and send to interact with the remote end.kkkk
 
-handleSocket :: MVar Integer -> Integer -> String -> (Socket, SockAddr) -> IO()
-handleSocket totalMvar clientes file (connectionSocket,remoteAddr) = do
+handleSocket :: MVar Integer -> Integer -> [L.ByteString] -> (Socket, SockAddr) -> IO()
+handleSocket totalMvar clientes bsList (connectionSocket,remoteAddr) = do
   putStrLn $ "TCP connection established from " ++ show remoteAddr
   maybeReady <- recv connectionSocket 10
   -- TODO exception
@@ -38,8 +47,6 @@ handleSocket totalMvar clientes file (connectionSocket,remoteAddr) = do
 
   threadDelay 1000
   -- Mandar archivo
-  contenido <- L.readFile file
-  let bsList = groupBySize 50000 contenido
   mapM_ (sendLazy connectionSocket) bsList
   putStrLn $ "Cliente atendido: " ++ show remoteAddr
 

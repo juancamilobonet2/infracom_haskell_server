@@ -1,4 +1,4 @@
-module Client where
+module Main where
 
 import Network.Simple.TCP
 import System.Environment
@@ -33,11 +33,13 @@ cliente (connectionSocket, remoteAddr) = do
   --Recibir archivo
   bsList <- whileJust (recv connectionSocket 600000) return
 
+  putStrLn $ "Recibido cliente " ++ numCliente
+
   let fileName = "./ArchivosRecibidos/Cliente"++numCliente++"-Prueba-"++clientes++".txt"
   let file = L.fromChunks bsList
   L.writeFile fileName file
 
-  putStrLn "Listo"
+  putStrLn $ "Listo cliente " ++ numCliente
 
 
 
