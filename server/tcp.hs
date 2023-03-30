@@ -8,6 +8,9 @@ import qualified Data.ByteString.Lazy               as L
 import           Data.ByteString.Builder
 import           Data.Maybe ( isNothing )
 import           Crypto.Hash
+import           Data.Time.Clock
+import           Data.Time.Format
+
 main = do
   putStrLn "Starting server..."
   putStrLn "Cual archivo quiere mandar?"
@@ -16,19 +19,23 @@ main = do
   clientes <- readLn
   clientesConn <- newMVar 0
 
-  
+
   contenido <- L.readFile file
   let bsList = groupBySize 50000 contenido
   let hashed = hashlazy contenido :: Digest SHA256
   let bsHashed = encodeUtf8Txt $ show hashed
   putStrLn $ "Hash del archivo: " ++ show hashed
 
-  serve (Host "0.0.0.0") "80" (handleSocket clientesConn clientes bsList bsHashed)
+  time <- getCurrentTime
+  let logFile = "./logs/<"++formatMyTime time++">.txt"
+  logMvar <- newMVar logFile
+
+  serve (Host "0.0.0.0") "80" (handleSocket logMvar clientesConn clientes bsList bsHashed file)
   -- Now you may use connectionSocket as you please within this scope,
   -- possibly using recv and send to interact with the remote end.
 
-handleSocket :: MVar Integer -> Integer -> [L.ByteString] -> L.ByteString -> (Socket, SockAddr) -> IO()
-handleSocket totalMvar clientes bsList bsHashed (connectionSocket,remoteAddr) = do
+handleSocket :: MVar String -> MVar Integer -> Integer -> [L.ByteString] -> L.ByteString -> String -> (Socket, SockAddr) -> IO()
+handleSocket logMvar totalMvar clientes bsList bsHashed file (connectionSocket,remoteAddr) = do
   putStrLn $ "TCP connection established from " ++ show remoteAddr
   maybeReady <- recv connectionSocket 10
   -- TODO exception
@@ -51,10 +58,21 @@ handleSocket totalMvar clientes bsList bsHashed (connectionSocket,remoteAddr) = 
   maybeReady <- recv connectionSocket 10
 
   -- Mandar archivo
+  time0 <- getCurrentTime
   mapM_ (sendLazy connectionSocket) bsList
   putStrLn $ "Cliente atendido: " ++ show remoteAddr
+  time1 <- getCurrentTime
+
+  --Decrementar numero de clientes
+  clients <- takeMVar totalMvar
+  putMVar totalMvar (clients - 1)
 
   --TODO log
+  logFile <- takeMVar logMvar
+  currTime <- getCurrentTime
+  appendFile logFile $ "["++formatMyTime currTime++":"++show remoteAddr ++ "] Transferencia exitosa. Archivo "++file++" Mandado en "++ show (diffUTCTime time1 time0) ++ "Seg."
+  putMVar logMvar logFile
+  putStrLn $ "Listo, cerrando :" ++ show remoteAddr
 
 
 untilMVar :: (a -> Bool) -> MVar a -> IO()
@@ -74,3 +92,7 @@ groupBySize size bs = go bs
       | L.null bytes = []
       | otherwise      = let (chunk, rest) = L.splitAt (fromIntegral size) bytes
                          in chunk : go rest
+
+
+formatMyTime :: UTCTime -> String
+formatMyTime = formatTime defaultTimeLocale "%Y-%m-%d-%H-%M-%S"

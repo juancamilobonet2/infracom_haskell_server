@@ -27,12 +27,12 @@ cliente (connectionSocket, remoteAddr) = do
   let numCliente = maybe "Err" (unpack . decodeUtf8) maybeNumCliente
 
   --Recibir num clientes totales
-  maybeClientes <- recv connectionSocket 5
+  maybeClientes <- recv connectionSocket 2
   let clientes = maybe "Err" (unpack . decodeUtf8) maybeClientes
 
   --Recibir hash
   maybeHash <- recv connectionSocket 100
-  let hash = fromMaybe B.empty maybeHash
+  let hash = maybe "Err" (unpack . decodeUtf8) maybeHash
 
   --Mandar listo para recibir archivo
   sendLazy connectionSocket $ encodeUtf8Txt "ready"
@@ -44,9 +44,11 @@ cliente (connectionSocket, remoteAddr) = do
 
   --Verificar hash
   let hashed = hashlazy (L.fromChunks bsList) :: Digest SHA256
-  let bsHashed = encodeUtf8Txt $ show hashed
 
-  if bsHashed == L.fromStrict hash
+  putStrLn $ "Hash recibido cliente " ++ hash
+  putStrLn $ "Hash calculado cliente " ++ show hashed
+
+  if show hashed == hash
     then putStrLn $ "Hash correcto cliente " ++ numCliente
     else putStrLn $ "Hash incorrecto cliente " ++ numCliente
 
