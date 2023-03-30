@@ -70,7 +70,7 @@ handleSocket logMvar totalMvar clientes bsList bsHashed file (connectionSocket,r
   --TODO log
   logFile <- takeMVar logMvar
   currTime <- getCurrentTime
-  appendFile logFile $ "["++formatMyTime currTime++":"++show remoteAddr ++ "] Transferencia exitosa. Archivo "++file++" Mandado en "++ show (diffUTCTime time1 time0) ++ "Seg."
+  appendFile logFile $ "["++formatMyTime currTime++":"++show remoteAddr ++ "] Transferencia exitosa. Archivo "++file++" Mandado en "++ show (diffUTCTime time1 time0) ++ "seg.\n"
   putMVar logMvar logFile
   putStrLn $ "Listo, cerrando :" ++ show remoteAddr
 
