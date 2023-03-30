@@ -9,7 +9,7 @@ import           Data.ByteString.Builder
 import qualified Data.ByteString.Lazy               as L
 import qualified Data.ByteString                    as B
 import Control.Monad.Loops (untilM', untilM, whileJust)
-import CPrim (bSwapLabel)
+import Crypto.Hash
 
 main = do
   connect "192.168.202.135" "80" cliente
@@ -30,14 +30,31 @@ cliente (connectionSocket, remoteAddr) = do
   maybeClientes <- recv connectionSocket 5
   let clientes = maybe "Err" (unpack . decodeUtf8) maybeClientes
 
+  --Recibir hash
+  maybeHash <- recv connectionSocket 100
+  let hash = fromMaybe B.empty maybeHash
+
+  --Mandar listo para recibir archivo
+  sendLazy connectionSocket $ encodeUtf8Txt "ready"
+
   --Recibir archivo
   bsList <- whileJust (recv connectionSocket 600000) return
 
   putStrLn $ "Recibido cliente " ++ numCliente
 
+  --Verificar hash
+  let hashed = hashlazy (L.fromChunks bsList) :: Digest SHA256
+  let bsHashed = encodeUtf8Txt $ show hashed
+
+  if bsHashed == L.fromStrict hash
+    then putStrLn $ "Hash correcto cliente " ++ numCliente
+    else putStrLn $ "Hash incorrecto cliente " ++ numCliente
+
   let fileName = "./ArchivosRecibidos/Cliente"++numCliente++"-Prueba-"++clientes++".txt"
   let file = L.fromChunks bsList
   L.writeFile fileName file
+
+
 
   putStrLn $ "Listo cliente " ++ numCliente
 
