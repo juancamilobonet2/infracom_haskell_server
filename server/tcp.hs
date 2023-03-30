@@ -44,6 +44,7 @@ handleSocket totalMvar clientes bsList bsHashed (connectionSocket,remoteAddr) = 
   sendLazy connectionSocket $ encodeUtf8Txt $ show clientes
 
   --Mandar hash
+  threadDelay 10000
   sendLazy connectionSocket bsHashed
 
   --Recibir listo para recibir archivo
