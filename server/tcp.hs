@@ -38,7 +38,6 @@ handleSocket :: MVar String -> MVar Integer -> Integer -> [L.ByteString] -> L.By
 handleSocket logMvar totalMvar clientes bsList bsHashed file (connectionSocket,remoteAddr) = do
   putStrLn $ "TCP connection established from " ++ show remoteAddr
   maybeReady <- recv connectionSocket 10
-  -- TODO exception
   putStrLn $ "Cliente listo: " ++ show remoteAddr
   clientNum <- takeMVar totalMvar
   putMVar totalMvar (clientNum + 1)
@@ -67,7 +66,7 @@ handleSocket logMvar totalMvar clientes bsList bsHashed file (connectionSocket,r
   clients <- takeMVar totalMvar
   putMVar totalMvar (clients - 1)
 
-  --TODO log
+  -- log
   logFile <- takeMVar logMvar
   currTime <- getCurrentTime
   appendFile logFile $ "["++formatMyTime currTime++":"++show remoteAddr ++ "] Transferencia exitosa. Archivo "++file++" Mandado en "++ show (diffUTCTime time1 time0) ++ "seg.\n"

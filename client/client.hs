@@ -19,8 +19,6 @@ main = do
 cliente :: (Socket, SockAddr) -> IO()
 cliente (connectionSocket, remoteAddr) = do
   putStrLn $ "Connection established to " ++ show remoteAddr
-  time <- getCurrentTime
-  let logFile = "./logs/<"++formatMyTime time++">.txt"
 
   --Mandar listo
   sendLazy connectionSocket $ encodeUtf8Txt "ready"
@@ -61,8 +59,10 @@ cliente (connectionSocket, remoteAddr) = do
   let file = L.fromChunks bsList
   L.writeFile fileName file
 
-  currTime <- getCurrentTime
-  appendFile logFile $ "["++formatMyTime currTime++": Cliente"++ numCliente++ "] Transferencia exitosa. Archivo recibido en "++ show (diffUTCTime time1 time0) ++ "seg.\n"
+  time <- getCurrentTime
+  let logFile = "./logs/<"++formatMyTime time++"_"++numCliente++">.txt"
+  writeFile logFile $ "Transferencia exitosa. Archivo recibido en "++ show (diffUTCTime time1 time0) ++ "seg.\n"
+
   putStrLn $ "Listo cliente " ++ numCliente
 
 
